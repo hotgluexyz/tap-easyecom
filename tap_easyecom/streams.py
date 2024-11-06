@@ -206,7 +206,7 @@ class BuyOrdersStream(EasyEcomStream):
     schema = th.PropertiesList(
         th.Property("po_items", th.CustomType({"type": ["array", "string"]})),
         th.Property("po_id", th.IntegerType),
-        th.Property("total_po_value", th.NumberType),
+        th.Property("total_po_value", th.StringType),
         th.Property("po_number", th.IntegerType),
         th.Property("po_ref_num", th.StringType),
         th.Property("po_status_id", th.IntegerType),
