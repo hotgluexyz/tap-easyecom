@@ -144,7 +144,7 @@ class SellOrdersStream(EasyEcomStream):
 
         th.Property("order_status", th.StringType),
         th.Property("order_status_id", th.IntegerType),
-        th.Property("suborder_count", th.CustomType({"type": ["integer", "string"]})),
+        th.Property("suborder_count", th.CustomType({"type": ["string","integer"]})),
         th.Property("shipping_status", th.StringType),
         th.Property("shipping_status_id", th.IntegerType),
         th.Property(
@@ -185,7 +185,15 @@ class SellOrdersStream(EasyEcomStream):
         th.Property("billing_mobile", th.StringType),
         th.Property("order_quantity", th.IntegerType),
         th.Property("meta", th.StringType),
-        th.Property("documents", th.StringType),
+        th.Property("documents", th.ObjectType(
+            th.Property("originalLabelUrl", th.StringType),
+            th.Property("easyecom_invoice", th.StringType),
+            th.Property("label", th.StringType),
+            th.Property("intaxform", th.StringType),
+            th.Property("outtaxform", th.StringType),
+            th.Property("marketplaceinvoice", th.StringType),
+            th.Property("marketplace_tax_invoice", th.StringType),
+        )),
         th.Property("total_amount", th.NumberType),
         th.Property("total_tax", th.NumberType),
         th.Property("total_shipping_charge", th.NumberType),
