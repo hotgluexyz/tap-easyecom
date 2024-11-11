@@ -1,6 +1,8 @@
 """REST client handling, including EasyEcomStream base class."""
 from urllib.parse import urlparse, parse_qs
 from functools import cached_property
+import singer
+from singer import StateMessage
 from singer_sdk.streams import RESTStream
 
 from tap_easyecom.auth import BearerTokenAuthenticator
@@ -51,3 +53,16 @@ class EasyEcomStream(RESTStream):
             params["sort"] = "asc"
             params["order_by"] = self.replication_key
         return params
+
+    def _write_state_message(self) -> None:
+        """Write out a STATE message with the latest state."""
+        tap_state = self.tap_state
+
+        if tap_state and tap_state.get("bookmarks"):
+            for stream_name in tap_state.get("bookmarks").keys():
+                if stream_name in [
+                    "gl_entries_dimensions",
+                ] and tap_state["bookmarks"][stream_name].get("partitions"):
+                    tap_state["bookmarks"][stream_name] = {"partitions": []}
+
+        singer.write_message(StateMessage(value=tap_state))
