@@ -19,7 +19,6 @@ class EasyEcomStream(RESTStream):
     ):
         """Return a token for identifying next page or None if no more pages."""
         res_json = response.json()
-        next_url = res_json.get("nextUrl", res_json.get("data", {}).get("nextUrl"))
         if not next_url:
             if isinstance(res_json.get("data"), dict):
                 next_url = res_json.get("data", {}).get("nextUrl")
