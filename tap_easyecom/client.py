@@ -17,7 +17,7 @@ class EasyEcomStream(RESTStream):
     ):
         """Return a token for identifying next page or None if no more pages."""
         res_json = response.json()
-        next_url = res_json.get("nextUrl")
+        next_url = res_json.get("nextUrl", res_json.get("data", {}).get("nextUrl"))
         if next_url:
             return parse_qs(urlparse(next_url).query)['cursor']
 
