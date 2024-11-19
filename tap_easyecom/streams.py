@@ -82,6 +82,39 @@ class SuppliersStream(EasyEcomStream):
         ),
     ).to_dict()
 
+class ProductCompositionsStream(EasyEcomStream):
+    name = "product_compositions"
+    path = "/Products/getKits"
+    primary_keys = ["c_id"]
+
+    schema = th.PropertiesList(
+        th.Property("product_id", th.IntegerType),
+        th.Property("sku", th.StringType),
+        th.Property("accounting_sku", th.StringType),
+        th.Property("accounting_unit", th.StringType),
+        th.Property("mrp", th.NumberType),
+        th.Property("add_date", th.DateTimeType),
+        th.Property("lastUpdateDate", th.DateTimeType),
+        th.Property("cost", th.NumberType),
+        th.Property("HSNCode", th.StringType),
+        th.Property("colour", th.StringType),
+        th.Property("weight", th.NumberType),
+        th.Property("height", th.NumberType),
+        th.Property("length", th.NumberType),
+        th.Property("width", th.NumberType),
+        th.Property("size", th.StringType),
+        th.Property("material_type", th.IntegerType),
+        th.Property("modelNumber", th.StringType),
+        th.Property("modelName", th.StringType),
+        th.Property("category", th.StringType),
+        th.brand("modelName", th.StringType),
+        th.Property("c_id", th.IntegerType),
+        th.Property(
+                    "subProducts",
+                    th.CustomType({"type": ["array", "object"]}),
+                ),
+    ).to_dict()
+
 
 class SellOrdersStream(EasyEcomStream):
     name = "sell_orders"
