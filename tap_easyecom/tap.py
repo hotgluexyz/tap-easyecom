@@ -5,6 +5,7 @@ from singer_sdk import typing as th  # JSON schema typing helpers
 
 from tap_easyecom.streams import (
     ProductsStream,
+    ProductCompositionsStream,
     SuppliersStream,
     SellOrdersStream,
     BuyOrdersStream,
@@ -14,6 +15,7 @@ from tap_easyecom.streams import (
 
 STREAM_TYPES = [
     ProductsStream,
+    ProductCompositionsStream,
     SuppliersStream,
     SellOrdersStream,
     BuyOrdersStream,
