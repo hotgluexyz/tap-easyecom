@@ -107,7 +107,7 @@ class ProductCompositionsStream(EasyEcomStream):
         th.Property("modelNumber", th.StringType),
         th.Property("modelName", th.StringType),
         th.Property("category", th.StringType),
-        th.brand("modelName", th.StringType),
+        th.Property("brand", th.StringType),
         th.Property("c_id", th.IntegerType),
         th.Property(
                     "subProducts",
