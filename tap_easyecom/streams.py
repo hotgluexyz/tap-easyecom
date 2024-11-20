@@ -234,7 +234,7 @@ class SellOrdersStream(EasyEcomStream):
         th.Property("collectable_amount", th.NumberType),
         th.Property("tcs_rate", th.CustomType({"type": ["number", "string"]})),
         th.Property("tcs_amount", th.NumberType),
-        th.Property("customer_code", th.StringType),
+        th.Property("customer_code", th.CustomType({"type": ["number", "string"]})),
         th.Property("fulfillable_status", th.IntegerType),
     ).to_dict()
 
