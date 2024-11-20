@@ -77,7 +77,7 @@ class ProductsStream(EasyEcomStream):
                     th.Property("model_no", th.StringType),
                     th.Property("EANUPC", th.StringType),
                     th.Property("hsn_code", th.StringType),
-                    th.Property("product shelf life", th.IntegerType),  # Mantendo com espaço
+                    th.Property("product shelf life", th.IntegerType),
                     th.Property("product_image_url", th.StringType),
                     th.Property("brand_id", th.IntegerType),
                     th.Property("cp_inventory", th.IntegerType),
@@ -85,7 +85,14 @@ class ProductsStream(EasyEcomStream):
                     th.Property("tax_rule_name", th.StringType),
                     th.Property(
                         "custom_fields",
-                            th.CustomType({"type": ["array", "object"]}),
+                            th.ArrayType(
+                                th.ObjectType(
+                                th.Property("cp_id", th.IntegerType),
+                                th.Property("field_name", th.StringType),
+                                th.Property("value", th.StringType),
+                                th.Property("enabled", th.IntegerType),
+                                )
+                            ),
                     ),
                 )
             ),
@@ -112,7 +119,7 @@ class ProductsStream(EasyEcomStream):
                     th.Property("model_no", th.StringType),
                     th.Property("EANUPC", th.StringType),
                     th.Property("hsn_code", th.StringType),
-                    th.Property("product shelf life", th.IntegerType),  # Mantendo com espaço
+                    th.Property("product shelf life", th.IntegerType),
                     th.Property("product_image_url", th.StringType),
                     th.Property("brand_id", th.IntegerType),
                     th.Property("cp_inventory", th.IntegerType),
