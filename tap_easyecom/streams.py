@@ -56,7 +56,7 @@ class ProductsStream(EasyEcomStream):
                     th.Property("sku", th.StringType),
                     th.Property("parent_cpId", th.IntegerType),
                     th.Property("cpId", th.IntegerType),
-                    th.Property("active", th.BooleanType),
+                    th.Property("active", th.IntegerType),
                     th.Property("accounting_sku", th.StringType),
                     th.Property("accounting_unit", th.StringType),
                     th.Property("product_id", th.IntegerType),
