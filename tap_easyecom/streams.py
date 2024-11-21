@@ -262,12 +262,12 @@ class SellOrdersStream(EasyEcomStream):
         th.Property("shipping_status_id", th.IntegerType),
         th.Property(
             "shipping_history",
-            th.ObjectType(
+            th.ArrayType(th.ObjectType(
                 th.Property("qc_pass_datetime", th.DateTimeType),
                 th.Property("confirm_datetime", th.DateTimeType),
                 th.Property("print_datetime", th.DateTimeType),
                 th.Property("manifest_datetime", th.DateTimeType),
-            ),
+            )),
         ),
         th.Property("delivery_date", th.DateTimeType),
         th.Property("payment_mode", th.StringType),
@@ -312,9 +312,9 @@ class SellOrdersStream(EasyEcomStream):
         th.Property("total_shipping_charge", th.NumberType),
         th.Property("total_discount", th.NumberType),
         th.Property("collectable_amount", th.NumberType),
-        th.Property("tcs_rate", th.NumberType),
+        th.Property("tcs_rate", th.CustomType({"type": ["number", "string"]})),
         th.Property("tcs_amount", th.NumberType),
-        th.Property("customer_code", th.StringType),
+        th.Property("customer_code", th.CustomType({"type": ["number", "string"]})),
         th.Property("fulfillable_status", th.IntegerType),
     ).to_dict()
 
