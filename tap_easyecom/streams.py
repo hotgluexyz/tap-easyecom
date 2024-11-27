@@ -147,6 +147,10 @@ class SuppliersStream(EasyEcomStream):
     schema = th.PropertiesList(
         th.Property("vendor_name", th.StringType),
         th.Property("vendor_c_id", th.IntegerType),
+        th.Property("vendor_code", th.StringType),
+        th.Property("firstname ", th.StringType),
+        th.Property("lastname", th.StringType),
+        th.Property("email", th.StringType),
         th.Property(
             "address",
             th.ObjectType(
