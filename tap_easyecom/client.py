@@ -47,16 +47,26 @@ class EasyEcomStream(RESTStream):
         return headers
 
 
-    def get_url_params(self,context,next_page_token):
-        params: dict = {}
-        if next_page_token:
-            params["cursor"] = next_page_token
-        if self.page_size:
-            params["limit"] = self.page_size
-        if self.replication_key:
-            params["sort"] = "asc"
-            params["order_by"] = self.replication_key
-        return params
+    def get_url_params(self, context, next_page_token):
+    params: dict = {}
+    if next_page_token:
+        params["cursor"] = next_page_token
+    if self.page_size:
+        params["limit"] = self.page_size
+    if self.replication_key:
+        params["sort"] = "asc"
+        params["order_by"] = self.replication_key
+
+        # Check if the stream is 'BuyOrdersStream'
+        if self.name == "buy_orders" and context and self.replication_key in context:
+            updated_after = context[self.replication_key]
+            # Format updated_after to Y-m-d
+            params["updated_after"] = datetime.strptime(updated_after, "%Y-%m-%dT%H:%M:%S").strftime("%Y-%m-%d")
+        elif context and self.replication_key in context:
+            # Default behavior for other streams
+            params["updated_after"] = context[self.replication_key]
+
+    return params
 
     def _write_state_message(self) -> None:
         """Write out a STATE message with the latest state."""
