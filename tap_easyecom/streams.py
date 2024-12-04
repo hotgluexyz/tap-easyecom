@@ -341,6 +341,7 @@ class BuyOrdersStream(EasyEcomStream):
         th.Property("po_created_warehouse_c_id", th.IntegerType),
         th.Property("vendor_name", th.StringType),
         th.Property("vendor_c_id", th.IntegerType),
+        th.Property("vendor_code", th.StringType),
     ).to_dict()
 
 
