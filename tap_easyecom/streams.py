@@ -254,10 +254,10 @@ class SellOrdersStream(EasyEcomStream):
         th.Property("carrier_id", th.IntegerType),
         th.Property("awb_number", th.StringType),
         # TODO: what??
-        th.Property("Package Weight", th.IntegerType),
-        th.Property("Package Height", th.IntegerType),
-        th.Property("Package Length", th.IntegerType),
-        th.Property("Package Width", th.IntegerType),
+        th.Property("Package Weight", th.NumberType),
+        th.Property("Package Height", th.NumberType),
+        th.Property("Package Length", th.NumberType),
+        th.Property("Package Width", th.NumberType),
 
         th.Property("order_status", th.StringType),
         th.Property("order_status_id", th.IntegerType),
