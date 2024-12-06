@@ -254,7 +254,7 @@ class SellOrdersStream(EasyEcomStream):
         th.Property("carrier_id", th.IntegerType),
         th.Property("awb_number", th.StringType),
         # TODO: what??
-        th.Property("Package Weight", th.IntegerType),
+        th.Property(" th.Property("Package Weight" Weight", th.NumberType),
         th.Property("Package Height", th.IntegerType),
         th.Property("Package Length", th.IntegerType),
         th.Property("Package Width", th.IntegerType),
