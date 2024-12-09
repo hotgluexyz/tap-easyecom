@@ -6,6 +6,7 @@ from singer import StateMessage
 from singer_sdk.streams import RESTStream
 
 from tap_easyecom.auth import BearerTokenAuthenticator
+from pendulum import parse
 
 class EasyEcomStream(RESTStream):
     """EasyEcom stream class."""
@@ -46,6 +47,12 @@ class EasyEcomStream(RESTStream):
             headers["User-Agent"] = self.config.get("user_agent")
         return headers
 
+    def get_starting_time(self, context):
+        start_date = self.config.get("start_date")
+        if start_date:
+            start_date = parse(self.config.get("start_date"))
+        rep_key = self.get_starting_timestamp(context)
+        return rep_key or start_date
 
     def get_url_params(self,context,next_page_token):
         params: dict = {}
@@ -53,9 +60,12 @@ class EasyEcomStream(RESTStream):
             params["cursor"] = next_page_token
         if self.page_size:
             params["limit"] = self.page_size
+        if hasattr(self, "additional_params"):
+            params.update(self.additional_params)
         if self.replication_key:
-            params["sort"] = "asc"
-            params["order_by"] = self.replication_key
+            start_date = self.get_starting_time(context)
+            date_filter = self.date_filter_param if hasattr(self, "date_filter_param") else "updated_after"
+            params[date_filter] = start_date.strftime('%Y-%m-%d %H:%M:%S')
         return params
 
     def _write_state_message(self) -> None:
