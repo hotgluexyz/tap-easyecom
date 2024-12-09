@@ -356,7 +356,7 @@ class ReceiptsStream(EasyEcomStream):
     schema = th.PropertiesList(
         th.Property("grn_id", th.IntegerType),
         th.Property("grn_invoice_number", th.StringType),
-        th.Property("total_grn_value", th.IntegerType),
+        th.Property("total_grn_value", th.NumberType),
         th.Property("grn_status_id", th.IntegerType),
         th.Property("grn_status", th.StringType),
         th.Property("grn_created_at", th.DateTimeType),
