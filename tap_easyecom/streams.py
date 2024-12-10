@@ -328,6 +328,7 @@ class BuyOrdersStream(EasyEcomStream):
     name = "buy_orders"
     path = "/wms/V2/getPurchaseOrderDetails"
     primary_keys = ["po_id"]
+    replication_key = "po_updated_date"
 
     schema = th.PropertiesList(
         th.Property("po_items", th.CustomType({"type": ["array", "string"]})),
