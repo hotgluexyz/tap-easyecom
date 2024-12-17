@@ -1,7 +1,16 @@
 """Stream type classes for tap-easyecom."""
 
+from typing import Any, Dict, Iterable, Optional, List
 from singer_sdk import typing as th
 from tap_easyecom.client import EasyEcomStream
+from datetime import datetime, timedelta
+import pytz
+import copy
+from singer_sdk.exceptions import InvalidStreamSortException
+from singer_sdk.helpers._state import (
+    finalize_state_progress_markers,
+    log_sort_error,
+)
 
 
 class ProductsStream(EasyEcomStream):
@@ -206,6 +215,10 @@ class SellOrdersStream(EasyEcomStream):
     path = "/orders/V2/getAllOrders"
     primary_keys = ["order_id"]
     records_jsonpath = "$.data.orders[*]"
+    replication_key = "last_update_date"
+    start_date = None
+    end_date = None
+    today = None
 
     schema = th.PropertiesList(
         th.Property("suborders", th.CustomType({"type": ["array", "string"]})),
@@ -247,7 +260,7 @@ class SellOrdersStream(EasyEcomStream):
         th.Property("invoice_number", th.StringType),
         th.Property("marketplace_invoice_num", th.StringType),
         th.Property("shipping_last_update_date", th.DateTimeType),
-        th.Property("batch_id", th.StringType),
+        th.Property("batch_id", th.CustomType({"type": ["string","number"]})),
         th.Property("batch_created_at", th.DateTimeType),
         th.Property("message", th.StringType),
         th.Property("courier_aggregator_name", th.StringType),
@@ -255,10 +268,10 @@ class SellOrdersStream(EasyEcomStream):
         th.Property("carrier_id", th.IntegerType),
         th.Property("awb_number", th.StringType),
         # TODO: what??
-        th.Property("Package Weight", th.NumberType),
-        th.Property("Package Height", th.NumberType),
-        th.Property("Package Length", th.NumberType),
-        th.Property("Package Width", th.NumberType),
+        th.Property("Package Weight", th.CustomType({"type": ["string","number"]})),
+        th.Property("Package Height", th.CustomType({"type": ["string","number"]})),
+        th.Property("Package Length", th.CustomType({"type": ["string","number"]})),
+        th.Property("Package Width", th.CustomType({"type": ["string","number"]})),
 
         th.Property("order_status", th.StringType),
         th.Property("order_status_id", th.IntegerType),
@@ -323,6 +336,35 @@ class SellOrdersStream(EasyEcomStream):
         th.Property("fulfillable_status", th.IntegerType),
     ).to_dict()
 
+    def get_next_page_token(self, response, previous_token):
+        next_page_token = super().get_next_page_token(response, previous_token)
+        if not next_page_token and self.end_date and self.today and self.end_date < self.today:
+            return "iterate"
+        return next_page_token
+    
+    def get_url_params(self, context, next_page_token):
+        params = dict()
+        if self.page_size:
+            params["limit"] = self.page_size
+        if next_page_token != "iterate":
+            params["cursor"] = next_page_token
+
+        # for incrementals iterate in chunks of 7 days
+        if self.start_date is None and self.stream_state.get("replication_key_value"):
+            self.today = pytz.utc.localize(datetime.utcnow())
+            self.start_date = self.get_starting_time(context)
+
+        # move to the next date chunk
+        if next_page_token == "iterate":
+            self.start_date = self.end_date - timedelta(seconds=1) 
+        
+        if self.start_date:
+            self.end_date = self.start_date + timedelta(days=7)
+            params["updated_after"] = self.start_date.strftime('%Y-%m-%d %H:%M:%S')
+            params["updated_before"] = self.end_date.strftime('%Y-%m-%d %H:%M:%S')
+
+        return params
+    
 
 class BuyOrdersStream(EasyEcomStream):
     name = "buy_orders"
