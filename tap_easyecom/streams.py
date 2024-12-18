@@ -350,7 +350,7 @@ class SellOrdersStream(EasyEcomStream):
             params["cursor"] = next_page_token
 
         # for incrementals iterate in chunks of 7 days
-        if self.start_date is None and self.stream_state.get("replication_key_value"):
+        if self.start_date is None:
             self.today = pytz.utc.localize(datetime.utcnow())
             self.start_date = self.get_starting_time(context)
 
