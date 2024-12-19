@@ -219,6 +219,7 @@ class SellOrdersStream(EasyEcomStream):
     start_date = None
     end_date = None
     today = None
+    page_size = 50
 
     schema = th.PropertiesList(
         th.Property("suborders", th.CustomType({"type": ["array", "string"]})),
@@ -338,6 +339,8 @@ class SellOrdersStream(EasyEcomStream):
 
     def get_next_page_token(self, response, previous_token):
         next_page_token = super().get_next_page_token(response, previous_token)
+        if next_page_token:
+            next_page_token = next_page_token[0]
         if not next_page_token and self.end_date and self.today and self.end_date < self.today:
             return f"iterate_{self.start_date}"
         return next_page_token
