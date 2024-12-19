@@ -339,29 +339,29 @@ class SellOrdersStream(EasyEcomStream):
     def get_next_page_token(self, response, previous_token):
         next_page_token = super().get_next_page_token(response, previous_token)
         if not next_page_token and self.end_date and self.today and self.end_date < self.today:
-            return "iterate"
+            return f"iterate_{self.start_date}"
         return next_page_token
     
     def get_url_params(self, context, next_page_token):
         params = dict()
         if self.page_size:
             params["limit"] = self.page_size
-        if next_page_token != "iterate":
+        if next_page_token and not next_page_token.startswith("iterate"):
             params["cursor"] = next_page_token
 
-        # for incrementals iterate in chunks of 7 days
+        # Initialize today, start_date and end_date
         if self.start_date is None:
             self.today = pytz.utc.localize(datetime.utcnow())
             self.start_date = self.get_starting_time(context)
+            self.end_date = self.start_date + timedelta(days=7)
 
         # move to the next date chunk
-        if next_page_token == "iterate":
-            self.start_date = self.end_date - timedelta(seconds=1) 
-        
-        if self.start_date:
-            self.end_date = self.start_date + timedelta(days=7)
-            params["updated_after"] = self.start_date.strftime('%Y-%m-%d %H:%M:%S')
-            params["updated_before"] = self.end_date.strftime('%Y-%m-%d %H:%M:%S')
+        if next_page_token and next_page_token.startswith("iterate"):
+            self.start_date = self.end_date - timedelta(seconds=1)         
+            self.end_date = self.start_date + timedelta(days=7, seconds=1)
+
+        params["updated_after"] = self.start_date.strftime('%Y-%m-%d %H:%M:%S')
+        params["updated_before"] = self.end_date.strftime('%Y-%m-%d %H:%M:%S')
 
         return params
     

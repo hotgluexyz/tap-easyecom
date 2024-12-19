@@ -1,4 +1,6 @@
 """REST client handling, including EasyEcomStream base class."""
+from typing import Callable
+from singer_sdk.exceptions import RetriableAPIError
 from urllib.parse import urlparse, parse_qs
 from functools import cached_property
 import singer
@@ -7,6 +9,8 @@ from singer_sdk.streams import RESTStream
 
 from tap_easyecom.auth import BearerTokenAuthenticator
 from pendulum import parse
+import backoff
+import requests
 
 class EasyEcomStream(RESTStream):
     """EasyEcom stream class."""
@@ -80,3 +84,16 @@ class EasyEcomStream(RESTStream):
                     tap_state["bookmarks"][stream_name] = {"partitions": []}
 
         singer.write_message(StateMessage(value=tap_state))
+
+    def request_decorator(self, func: Callable) -> Callable:
+        decorator: Callable = backoff.on_exception(
+            self.backoff_wait_generator,
+            (
+                RetriableAPIError,
+                requests.exceptions.ReadTimeout,
+                requests.exceptions.ConnectionError,
+            ),
+            max_tries=10,
+            on_backoff=self.backoff_handler,
+        )(func)
+        return decorator
