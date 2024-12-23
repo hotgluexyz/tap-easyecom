@@ -54,6 +54,7 @@ class ProductsStream(EasyEcomStream):
         th.Property("tax_rate", th.NumberType),
         th.Property("product shelf life", th.IntegerType),
         th.Property("product_image_url", th.StringType),
+        th.Property("vendor_code", th.ArrayType(th.StringType)),
         th.Property("cp_inventory", th.IntegerType),
         th.Property(
                     "custom_fields",
