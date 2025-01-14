@@ -1,5 +1,5 @@
 """REST client handling, including EasyEcomStream base class."""
-from typing import Callable
+from typing import Callable, Iterable
 from singer_sdk.exceptions import RetriableAPIError
 from urllib.parse import urlparse, parse_qs
 from functools import cached_property
@@ -97,3 +97,9 @@ class EasyEcomStream(RESTStream):
             on_backoff=self.backoff_handler,
         )(func)
         return decorator
+    
+    def parse_response(self, response) -> Iterable[dict]:
+        if response.json().get("data") == "No Data Found":
+            yield from []
+        else:
+            yield from super().parse_response(response)
