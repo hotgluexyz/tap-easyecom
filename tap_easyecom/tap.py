@@ -40,7 +40,6 @@ class TapEasyEcom(Tap):
     ) -> None:
         super().__init__(config, catalog, state, parse_env_config, validate_config)
         self.config_file = config[0]
-        self.logger = logging.getLogger(__name__)
         self.logger.info("Initializing TapEasyEcom")
 
     # TODO: Update this section with the actual config values you expect:

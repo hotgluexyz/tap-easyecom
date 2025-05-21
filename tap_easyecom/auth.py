@@ -78,12 +78,14 @@ class BearerTokenAuthenticator(APIAuthenticatorBase):
             response.raise_for_status()
             token_data = response.json()
             
-            if not token_data.get("access_token"):
+            # Extract token from nested structure
+            if not token_data.get("data", {}).get("token", {}).get("jwt_token"):
                 self.logger.error(f"Invalid token response: {token_data}")
                 raise ValueError("No access token in response")
                 
-            self._tap._config["access_token"] = token_data["access_token"]
-            self._tap._config["expires_in"] = token_data.get("expires_in", 3600)
+            self._tap._config["access_token"] = token_data["data"]["token"]["jwt_token"]
+            self._tap._config["expires_in"] = token_data["data"]["token"].get("expires_in", 3600)
+            self._tap._config["token_created_at"] = datetime.now().timestamp()
             self.logger.info("Successfully updated access token")
             
         except requests.exceptions.RequestException as e:
