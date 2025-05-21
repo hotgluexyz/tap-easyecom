@@ -269,12 +269,10 @@ class SellOrdersStream(EasyEcomStream):
         th.Property("courier", th.StringType),
         th.Property("carrier_id", th.IntegerType),
         th.Property("awb_number", th.StringType),
-        # TODO: what??
-        th.Property("Package Weight", th.CustomType({"type": ["string","number"]})),
-        th.Property("Package Height", th.CustomType({"type": ["string","number"]})),
-        th.Property("Package Length", th.CustomType({"type": ["string","number"]})),
-        th.Property("Package Width", th.CustomType({"type": ["string","number"]})),
-
+        th.Property("Package Weight", th.CustomType({"type": ["number", "null"]})),
+        th.Property("Package Height", th.CustomType({"type": ["number", "null"]})),
+        th.Property("Package Length", th.CustomType({"type": ["number", "null"]})),
+        th.Property("Package Width", th.CustomType({"type": ["number", "null"]})),
         th.Property("order_status", th.StringType),
         th.Property("order_status_id", th.IntegerType),
         th.Property("suborder_count", th.CustomType({"type": ["string","integer"]})),
