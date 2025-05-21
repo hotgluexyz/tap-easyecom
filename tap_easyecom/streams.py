@@ -317,7 +317,7 @@ class SellOrdersStream(EasyEcomStream):
         th.Property("billing_country", th.StringType),
         th.Property("billing_mobile", th.StringType),
         th.Property("order_quantity", th.IntegerType),
-        th.Property("meta", th.StringType),
+        th.Property("meta", th.CustomType({"type": ["string", "object", "null"]})),
         th.Property("documents", th.ObjectType(
             th.Property("originalLabelUrl", th.StringType),
             th.Property("easyecom_invoice", th.StringType),
