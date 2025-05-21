@@ -5,6 +5,7 @@ from typing import Optional
 from datetime import datetime
 import requests
 import json
+import logging
 
 
 class BearerTokenAuthenticator(APIAuthenticatorBase):
@@ -21,6 +22,7 @@ class BearerTokenAuthenticator(APIAuthenticatorBase):
         self._config_file = config_file
         self._tap = stream._tap
         self.expires_in = self._tap.config.get("expires_in", 0)
+        self.logger = logging.getLogger(__name__)
 
     @property
     def auth_headers(self) -> dict:
@@ -32,7 +34,10 @@ class BearerTokenAuthenticator(APIAuthenticatorBase):
             HTTP headers for authentication.
         """
         if not self.is_token_valid():
+            self.logger.info("Token expired or invalid, updating access token")
             self.update_access_token()
+        else:
+            self.logger.debug("Using existing valid token")
         result = super().auth_headers
         result[
             "Authorization"
@@ -62,38 +67,45 @@ class BearerTokenAuthenticator(APIAuthenticatorBase):
             "location_key": self.config.get("location_key"),
         }
 
-    def is_token_valid(self) -> bool:
-        now = round(datetime.utcnow().timestamp())
-        created_at = self._tap._config.get(
-            "created_at", 0
-        )
-
-        return now < (created_at + self.expires_in - 60)
-
-    # Authentication and refresh
     def update_access_token(self) -> None:
-        """Update `access_token` along with: `last_refreshed` and `expires_in`.
-
-        Raises:
-            RuntimeError: When OAuth login fails.
-        """
-        auth_request_payload = self.request_body
-        token_response = requests.post(self.auth_endpoint, data=auth_request_payload)
+        """Update the access token."""
         try:
-            token_last_refreshed = round(datetime.utcnow().timestamp())
-            token_response.raise_for_status()
-            self.logger.info("OAuth authorization attempt was successful.")
-            token_json = token_response.json()
-            token = token_json["data"]["token"]
-        except Exception as ex:
-            raise RuntimeError(
-                f"Failed login, response was '{token_response.json()}'. {ex}"
+            self.logger.info("Attempting to update access token")
+            response = requests.post(
+                self.auth_endpoint,
+                json=self.request_body,
             )
-        self.access_token = token["jwt_token"]
-        self.expires_in = token["expires_in"]
+            response.raise_for_status()
+            token_data = response.json()
+            
+            if not token_data.get("access_token"):
+                self.logger.error(f"Invalid token response: {token_data}")
+                raise ValueError("No access token in response")
+                
+            self._tap._config["access_token"] = token_data["access_token"]
+            self._tap._config["expires_in"] = token_data.get("expires_in", 3600)
+            self.logger.info("Successfully updated access token")
+            
+        except requests.exceptions.RequestException as e:
+            self.logger.error(f"Failed to update access token: {str(e)}")
+            if hasattr(e.response, 'text'):
+                self.logger.error(f"Response content: {e.response.text}")
+            raise
 
-        self._tap._config["created_at"] = token_last_refreshed
-        self._tap._config["access_token"] = self.access_token
-        self._tap._config["expires_in"] = self.expires_in
-        with open(self._tap.config_file, "w") as outfile:
-            json.dump(self._tap._config, outfile, indent=4)
+    def is_token_valid(self) -> bool:
+        """Check if the current token is valid."""
+        if not self._tap._config.get("access_token"):
+            self.logger.debug("No access token found")
+            return False
+            
+        if not self._tap._config.get("expires_in"):
+            self.logger.debug("No expiration time found for token")
+            return False
+            
+        # Add some buffer time (5 minutes) before actual expiration
+        expires_at = self._tap._config.get("token_created_at", 0) + self._tap._config.get("expires_in", 0) - 300
+        is_valid = datetime.now().timestamp() < expires_at
+        
+        if not is_valid:
+            self.logger.debug("Token has expired")
+        return is_valid

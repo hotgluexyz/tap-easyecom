@@ -2,6 +2,7 @@
 
 from singer_sdk import Tap
 from singer_sdk import typing as th  # JSON schema typing helpers
+import logging
 
 from tap_easyecom.streams import (
     ProductsStream,
@@ -14,13 +15,13 @@ from tap_easyecom.streams import (
 )
 
 STREAM_TYPES = [
-    ProductsStream,
-    ProductCompositionsStream,
-    SuppliersStream,
+     ProductsStream,
+     ProductCompositionsStream,
+     SuppliersStream,
     SellOrdersStream,
-    BuyOrdersStream,
-    ReceiptsStream,
-    ReturnsStream,
+     BuyOrdersStream,
+     ReceiptsStream,
+     ReturnsStream,
 ]
 
 
@@ -39,6 +40,8 @@ class TapEasyEcom(Tap):
     ) -> None:
         super().__init__(config, catalog, state, parse_env_config, validate_config)
         self.config_file = config[0]
+        self.logger = logging.getLogger(__name__)
+        self.logger.info("Initializing TapEasyEcom")
 
     # TODO: Update this section with the actual config values you expect:
     config_jsonschema = th.PropertiesList(
@@ -46,7 +49,21 @@ class TapEasyEcom(Tap):
     ).to_dict()
 
     def discover_streams(self):
-        return [stream(self) for stream in STREAM_TYPES]
+        """Return a list of discovered streams."""
+        self.logger.info("Discovering streams")
+        streams = [stream(self) for stream in STREAM_TYPES]
+        self.logger.info(f"Discovered {len(streams)} streams: {[s.name for s in streams]}")
+        return streams
+
+    def sync_all(self):
+        """Sync all streams."""
+        self.logger.info("Starting sync of all streams")
+        try:
+            super().sync_all()
+            self.logger.info("Successfully completed sync of all streams")
+        except Exception as e:
+            self.logger.error(f"Error during sync: {str(e)}")
+            raise
 
 
 if __name__ == "__main__":

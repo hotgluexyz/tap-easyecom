@@ -6,6 +6,7 @@ from functools import cached_property
 import singer
 from singer import StateMessage
 from singer_sdk.streams import RESTStream
+import logging
 
 from tap_easyecom.auth import BearerTokenAuthenticator
 from pendulum import parse
@@ -70,6 +71,8 @@ class EasyEcomStream(RESTStream):
             start_date = self.get_starting_time(context)
             date_filter = self.date_filter_param if hasattr(self, "date_filter_param") else "updated_after"
             params[date_filter] = start_date.strftime('%Y-%m-%d %H:%M:%S')
+        
+        self.logger.info(f"Request parameters for {self.name}: {params}")
         return params
 
     def _write_state_message(self) -> None:
@@ -84,6 +87,7 @@ class EasyEcomStream(RESTStream):
                     tap_state["bookmarks"][stream_name] = {"partitions": []}
 
         singer.write_message(StateMessage(value=tap_state))
+        self.logger.info(f"State message written for {self.name}")
 
     def request_decorator(self, func: Callable) -> Callable:
         decorator: Callable = backoff.on_exception(
@@ -99,7 +103,31 @@ class EasyEcomStream(RESTStream):
         return decorator
     
     def parse_response(self, response) -> Iterable[dict]:
-        if response.json().get("data") == "No Data Found":
-            yield from []
-        else:
-            yield from super().parse_response(response)
+        try:
+            if response.json().get("data") == "No Data Found":
+                self.logger.info(f"No data found in response for {self.name}")
+                yield from []
+            else:
+                self.logger.info(f"Parsing response for {self.name} with status code {response.status_code}")
+                yield from super().parse_response(response)
+        except Exception as e:
+            self.logger.error(f"Error parsing response for {self.name}: {str(e)}")
+            self.logger.error(f"Response content: {response.text}")
+            raise
+
+    def prepare_request(self, context, next_page_token):
+        """Prepare the request object."""
+        try:
+            request = super().prepare_request(context, next_page_token)
+            self.logger.info(f"Prepared request for {self.name} to URL: {request.url}")
+            return request
+        except Exception as e:
+            self.logger.error(f"Error preparing request for {self.name}: {str(e)}")
+            raise
+
+    def backoff_handler(self, details):
+        """Handle backoff retry."""
+        self.logger.warning(
+            f"Backing off {details['wait']} seconds after {details['tries']} tries "
+            f"calling {details['target'].__name__} due to {details['exception']}"
+        )
