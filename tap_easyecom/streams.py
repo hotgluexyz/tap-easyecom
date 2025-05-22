@@ -270,10 +270,11 @@ class SellOrdersStream(EasyEcomStream):
         th.Property("carrier_id", th.IntegerType),
         th.Property("awb_number", th.StringType),
         # TODO: what??
-        th.Property("Package Weight", th.NumberType),
-        th.Property("Package Height", th.NumberType),
-        th.Property("Package Length", th.NumberType),
-        th.Property("Package Width", th.NumberType),
+        th.Property("Package Weight", th.CustomType({"type": ["string","number"]})),
+        th.Property("Package Height", th.CustomType({"type": ["string","number"]})),
+        th.Property("Package Length", th.CustomType({"type": ["string","number"]})),
+        th.Property("Package Width", th.CustomType({"type": ["string","number"]})),
+
         th.Property("order_status", th.StringType),
         th.Property("order_status_id", th.IntegerType),
         th.Property("suborder_count", th.CustomType({"type": ["string","integer"]})),
@@ -316,7 +317,7 @@ class SellOrdersStream(EasyEcomStream):
         th.Property("billing_country", th.StringType),
         th.Property("billing_mobile", th.StringType),
         th.Property("order_quantity", th.IntegerType),
-        th.Property("meta", th.ObjectType()),
+        th.Property("meta", th.StringType),
         th.Property("documents", th.ObjectType(
             th.Property("originalLabelUrl", th.StringType),
             th.Property("easyecom_invoice", th.StringType),
@@ -458,7 +459,7 @@ class ReturnsStream(EasyEcomStream):
         th.Property("credit_note_number", th.StringType),
         th.Property("marketplace_credit_note_num", th.StringType),
         th.Property("marketplace_invoice_num", th.StringType),
-        th.Property("batch_id", th.NumberType),
+        th.Property("batch_id", th.StringType),
         th.Property("batch_created_at", th.DateTimeType),
         th.Property("payment_mode", th.StringType),
         th.Property("payment_mode_id", th.IntegerType),
