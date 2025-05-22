@@ -484,6 +484,6 @@ class ReturnsStream(EasyEcomStream):
         th.Property("order_quantity", th.IntegerType),
         th.Property("total_invoice_amount", th.NumberType),
         th.Property("total_invoice_tax", th.NumberType),
-        th.Property("invoice_collectable_amount", th.IntegerType),
+        th.Property("invoice_collectable_amount", th.NumberType),
         th.Property("items", th.CustomType({"type": ["array", "string"]})),
     ).to_dict()
