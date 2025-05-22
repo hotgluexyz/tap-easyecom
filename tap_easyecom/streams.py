@@ -459,7 +459,7 @@ class ReturnsStream(EasyEcomStream):
         th.Property("credit_note_number", th.StringType),
         th.Property("marketplace_credit_note_num", th.StringType),
         th.Property("marketplace_invoice_num", th.StringType),
-        th.Property("batch_id", th.NumberType),
+        th.Property("batch_id", th.IntegerType),
         th.Property("batch_created_at", th.DateTimeType),
         th.Property("payment_mode", th.StringType),
         th.Property("payment_mode_id", th.IntegerType),
