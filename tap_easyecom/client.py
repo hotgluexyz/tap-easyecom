@@ -8,7 +8,7 @@ from singer import StateMessage
 from singer_sdk.streams import RESTStream
 
 from tap_easyecom.auth import BearerTokenAuthenticator
-from pendulum import parse
+from pendulum.parser import parse
 import backoff
 import requests
 
@@ -54,7 +54,7 @@ class EasyEcomStream(RESTStream):
     def get_starting_time(self, context):
         start_date = self.config.get("start_date")
         if start_date:
-            start_date = parse(self.config.get("start_date"))
+            start_date = parse(start_date)
         rep_key = self.get_starting_timestamp(context)
         return rep_key or start_date
 
@@ -69,7 +69,8 @@ class EasyEcomStream(RESTStream):
         if self.replication_key:
             start_date = self.get_starting_time(context)
             date_filter = self.date_filter_param if hasattr(self, "date_filter_param") else "updated_after"
-            params[date_filter] = start_date.strftime('%Y-%m-%d %H:%M:%S')
+            if start_date:
+                params[date_filter] = start_date.strftime('%Y-%m-%d %H:%M:%S')
         return params
 
     def _write_state_message(self) -> None:
@@ -99,7 +100,16 @@ class EasyEcomStream(RESTStream):
         return decorator
     
     def parse_response(self, response) -> Iterable[dict]:
-        if response.json().get("data") == "No Data Found":
-            yield from []
-        else:
-            yield from super().parse_response(response)
+        try:
+            response_json = response.json()
+            if response_json.get("data") == "No Data Found":
+                yield from []
+            else:
+                yield from super().parse_response(response)
+        except (ValueError, requests.exceptions.JSONDecodeError) as e:
+            # Log the response content for debugging
+            self.logger.error(f"Failed to parse JSON response: {e}")
+            self.logger.error(f"Response status: {response.status_code}")
+            self.logger.error(f"Response content: {response.text[:500]}...")  # First 500 chars
+            # Re-raise the error to stop processing
+            raise
