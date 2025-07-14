@@ -23,16 +23,25 @@ class EasyEcomStream(RESTStream):
         self, response, previous_token
     ):
         """Return a token for identifying next page or None if no more pages."""
-        res_json = response.json()
-        next_url = res_json.get("nextUrl")
+        try:
+            res_json = response.json()
+            next_url = res_json.get("nextUrl")
 
-        if not next_url and isinstance(res_json.get("data", {}), dict):
-            next_url = res_json.get("data", {}).get("nextUrl")
+            if not next_url and isinstance(res_json.get("data", {}), dict):
+                next_url = res_json.get("data", {}).get("nextUrl")
 
-        if next_url:
-            return parse_qs(urlparse(next_url).query)['cursor']
+            if next_url:
+                return parse_qs(urlparse(next_url).query)['cursor']
 
-        return None
+            return None
+        except requests.exceptions.JSONDecodeError as e:
+            # Log the error for debugging
+            self.logger.error(f"Failed to parse JSON response in get_next_page_token: {e}")
+            self.logger.error(f"Response status code: {response.status_code}")
+            self.logger.error(f"Response text: {response.text[:200]}...")
+            
+            # If we can't parse the response, assume no more pages
+            return None
 
     @property
     def url_base(self) -> str:
@@ -99,7 +108,16 @@ class EasyEcomStream(RESTStream):
         return decorator
     
     def parse_response(self, response) -> Iterable[dict]:
-        if response.json().get("data") == "No Data Found":
+        try:
+            response_json = response.json()
+            if response_json.get("data") == "No Data Found":
+                yield from []
+            else:
+                yield from super().parse_response(response)
+        except requests.exceptions.JSONDecodeError as e:
+            self.logger.error(f"Failed to parse JSON response: {str(e)}")
+            self.logger.error(f"Response status code: {response.status_code}")
+            self.logger.error(f"Response headers: {response.headers}")
+            self.logger.error(f"Response text: {response.text[:500]}...")
+            
             yield from []
-        else:
-            yield from super().parse_response(response)
