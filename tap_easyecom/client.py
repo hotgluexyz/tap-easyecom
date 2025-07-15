@@ -23,15 +23,19 @@ class EasyEcomStream(RESTStream):
         self, response, previous_token
     ):
         """Return a token for identifying next page or None if no more pages."""
-        res_json = response.json()
-        next_url = res_json.get("nextUrl")
+        try:
+            res_json = response.json()
+            next_url = res_json.get("nextUrl")
 
-        if not next_url and isinstance(res_json.get("data", {}), dict):
-            next_url = res_json.get("data", {}).get("nextUrl")
+            if not next_url and isinstance(res_json.get("data", {}), dict):
+                next_url = res_json.get("data", {}).get("nextUrl")
 
-        if next_url:
-            return parse_qs(urlparse(next_url).query)['cursor']
-
+            if next_url:
+                return parse_qs(urlparse(next_url).query)['cursor']
+        except requests.exceptions.JSONDecodeError:
+            self.logger.info(
+                f"Malformed response body received in get_next_page_token. Ignoring cursor."
+            )
         return None
 
     @property
@@ -99,7 +103,19 @@ class EasyEcomStream(RESTStream):
         return decorator
     
     def parse_response(self, response) -> Iterable[dict]:
-        if response.json().get("data") == "No Data Found":
+        try:
+            response_json = response.json()
+            if response_json.get("data") == "No Data Found":
+                yield from []
+            else:
+                yield from super().parse_response(response)
+        except requests.exceptions.JSONDecodeError:
+            if response.text.strip() == "":
+                self.logger.info(
+                    f"Malformed response body received. Status: {response.status_code}"
+                )
+            else:
+                self.logger.warning(
+                    f"Unexpected response format (not valid JSON). Status: {response.status_code}, Body (truncated): {response.text[:200]!r}"
+                )
             yield from []
-        else:
-            yield from super().parse_response(response)
