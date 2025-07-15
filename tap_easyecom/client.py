@@ -32,14 +32,11 @@ class EasyEcomStream(RESTStream):
 
             if next_url:
                 return parse_qs(urlparse(next_url).query)['cursor']
-
-            return None
-        except requests.exceptions.JSONDecodeError as e:
-            self.logger.error(f"Failed to parse JSON response in get_next_page_token: {e}")
-            self.logger.error(f"Response status code: {response.status_code}")
-            self.logger.error(f"Response text: {response.text[:200]}...")
-            
-            return None
+        except requests.exceptions.JSONDecodeError:
+            self.logger.info(
+                f"Malformed response body received in get_next_page_token. Ignoring cursor."
+            )
+        return None
 
     @property
     def url_base(self) -> str:
@@ -112,10 +109,13 @@ class EasyEcomStream(RESTStream):
                 yield from []
             else:
                 yield from super().parse_response(response)
-        except requests.exceptions.JSONDecodeError as e:
-            self.logger.error(f"Failed to parse JSON response: {e}")
-            self.logger.error(f"Response status code: {response.status_code}")
-            self.logger.error(f"Response headers: {response.headers}")
-            self.logger.error(f"Response text: {response.text[:500]}...")
-            
+        except requests.exceptions.JSONDecodeError:
+            if response.text.strip() == "":
+                self.logger.info(
+                    f"Malformed response body received. Status: {response.status_code}"
+                )
+            else:
+                self.logger.warning(
+                    f"Unexpected response format (not valid JSON). Status: {response.status_code}, Body (truncated): {response.text[:200]!r}"
+                )
             yield from []
