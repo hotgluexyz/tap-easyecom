@@ -327,7 +327,7 @@ class SellOrdersStream(EasyEcomStream):
             th.Property("marketplaceinvoice", th.StringType),
             th.Property("marketplace_tax_invoice", th.StringType),
         )),
-        th.Property("total_amount", th.NumberType),
+        th.Property("total_amount", th.CustomType({"type": ["number", "string"]})),
         th.Property("total_tax", th.NumberType),
         th.Property("total_shipping_charge", th.NumberType),
         th.Property("total_discount", th.NumberType),
