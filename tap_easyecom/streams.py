@@ -270,10 +270,10 @@ class SellOrdersStream(EasyEcomStream):
         th.Property("carrier_id", th.IntegerType),
         th.Property("awb_number", th.StringType),
         # TODO: what??
-        th.Property("Package Weight", th.CustomType({"type": ["string", "number"]})),
-        th.Property("Package Height", th.CustomType({"type": ["string", "number"]})),
-        th.Property("Package Length", th.CustomType({"type": ["string", "number"]})),
-        th.Property("Package Width", th.CustomType({"type": ["string", "number"]})),
+        th.Property("Package Weight", th.NumberType),
+        th.Property("Package Height", th.NumberType),
+        th.Property("Package Length", th.NumberType),
+        th.Property("Package Width", th.NumberType),
 
         th.Property("order_status", th.StringType),
         th.Property("order_status_id", th.IntegerType),
@@ -327,13 +327,13 @@ class SellOrdersStream(EasyEcomStream):
             th.Property("marketplaceinvoice", th.StringType),
             th.Property("marketplace_tax_invoice", th.StringType),
         )),
-        th.Property("total_amount", th.CustomType({"type": ["number", "string"]})),
-        th.Property("total_tax", th.CustomType({"type": ["number", "string"]})),
-        th.Property("total_shipping_charge", th.CustomType({"type": ["number", "string"]})),
-        th.Property("total_discount", th.CustomType({"type": ["number", "string"]})),
-        th.Property("collectable_amount", th.CustomType({"type": ["number", "string"]})),
-        th.Property("tcs_rate", th.CustomType({"type": ["number", "string"]})),
-        th.Property("tcs_amount", th.CustomType({"type": ["number", "string"]})),
+        th.Property("total_amount", th.NumberType),
+        th.Property("total_tax", th.NumberType),
+        th.Property("total_shipping_charge", th.NumberType),
+        th.Property("total_discount", th.NumberType),
+        th.Property("collectable_amount", th.NumberType),
+        th.Property("tcs_rate", th.NumberType),
+        th.Property("tcs_amount", th.NumberType),
         th.Property("customer_code", th.CustomType({"type": ["number", "string"]})),
         th.Property("fulfillable_status", th.IntegerType),
     ).to_dict()
@@ -368,6 +368,20 @@ class SellOrdersStream(EasyEcomStream):
         params["updated_before"] = self.end_date.strftime('%Y-%m-%d %H:%M:%S')
 
         return params
+    
+    def post_process(self, row: dict, context: dict):
+        for key, value in row.items():
+            field_types = self.schema.get("properties", {}).get(key, {}).get("type")
+            if not field_types:
+                continue   
+            if isinstance(value,str) and "number" in field_types:
+                try: 
+                    row[key] = float(value)
+                except Exception as e:
+                    self.logger.debug("Parsing {key}={value} failed")
+                    raise e
+        return row
+        
     
 
 class BuyOrdersStream(EasyEcomStream):
