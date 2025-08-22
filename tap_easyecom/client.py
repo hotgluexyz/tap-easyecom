@@ -99,21 +99,26 @@ class EasyEcomStream(RESTStream):
         return decorator
     
     def post_process(self, row: dict, context: dict) -> dict:
-        """Post-process records to convert string numbers to float types.
-        
-        This method is called for each record and converts string values to float
-        when the schema indicates the field should be a number type.
-        """
+        """Convert string numbers to float and handle NA values."""
         for key, value in row.items():
-            field_types = self.schema.get("properties", {}).get(key, {}).get("type")
-            if not field_types:
-                continue   
-            if isinstance(value, str) and "number" in field_types:
-                try: 
-                    row[key] = float(value)
-                except Exception as e:
-                    self.logger.debug(f"Parsing {key}={value} failed")
-                    raise e
+            # Handle actual null values
+            if value is None:
+                continue  # Already None, no need to change
+            
+            if isinstance(value, str):
+                # Handle NA values
+                if value.upper() in ['NA', 'N/A', 'NULL', 'NONE', '']:
+                    row[key] = None
+                    continue
+                
+                # Convert string numbers to float
+                field_types = self.schema.get("properties", {}).get(key, {}).get("type")
+                if field_types and "number" in field_types:
+                    try:
+                        row[key] = float(value)
+                    except ValueError:
+                        self.logger.debug(f"Parsing {key}={value} failed")
+                        raise ValueError(f"Parsing {key}={value} failed")
         return row
     
     def parse_response(self, response) -> Iterable[dict]:

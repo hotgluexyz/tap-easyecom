@@ -367,8 +367,7 @@ class SellOrdersStream(EasyEcomStream):
         params["updated_after"] = self.start_date.strftime('%Y-%m-%d %H:%M:%S')
         params["updated_before"] = self.end_date.strftime('%Y-%m-%d %H:%M:%S')
 
-        return params
-    
+        return params    
 class BuyOrdersStream(EasyEcomStream):
     name = "buy_orders"
     path = "/wms/V2/getPurchaseOrderDetails"
