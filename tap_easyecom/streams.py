@@ -369,21 +369,6 @@ class SellOrdersStream(EasyEcomStream):
 
         return params
     
-    def post_process(self, row: dict, context: dict):
-        for key, value in row.items():
-            field_types = self.schema.get("properties", {}).get(key, {}).get("type")
-            if not field_types:
-                continue   
-            if isinstance(value,str) and "number" in field_types:
-                try: 
-                    row[key] = float(value)
-                except Exception as e:
-                    self.logger.debug("Parsing {key}={value} failed")
-                    raise e
-        return row
-        
-    
-
 class BuyOrdersStream(EasyEcomStream):
     name = "buy_orders"
     path = "/wms/V2/getPurchaseOrderDetails"
