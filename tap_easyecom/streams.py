@@ -395,7 +395,7 @@ class ReceiptsStream(EasyEcomStream):
     name = "receipts"
     path = "/Grn/V2/getGrnDetails"
     primary_keys = ["grn_id"]
-    replication_key = "po_created_date"
+    replication_key = "grn_created_at"
     date_filter_param = "created_after"
 
     schema = th.PropertiesList(
